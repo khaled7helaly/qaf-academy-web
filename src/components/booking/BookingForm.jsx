@@ -5,9 +5,10 @@
  * when adding/removing fields in form.config.js.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 import formConfig from "@config/form.config";
 import { buildZodSchema } from "@utils/buildZodSchema";
 import Input from "@components/ui/Input";
@@ -86,15 +87,54 @@ function renderField(field, register, errors) {
   );
 }
 
-export default function BookingForm({ serviceId, onSuccess, onError, submitLabel = "إرسال طلب الحجز" }) {
+export default function BookingForm({
+  serviceId,
+  onSuccess,
+  onError,
+  submitLabel = "إرسال طلب الحجز",
+}) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: { service: serviceId ?? "" },
   });
+
+  /*
+   * `defaultValues` is only read once — on mount. When the selected service
+   * changes afterwards (URL change, or picking one from the fallback
+   * dropdown), it must be pushed into RHF explicitly; otherwise the hidden
+   * `service` field stays empty and submit fails with "اختر خدمة".
+   */
+  useEffect(() => {
+    setValue("service", serviceId ?? "", {
+      // Only validate when a service is actually set, so the form doesn't
+      // show "اختر خدمة" before the user has submitted anything.
+      shouldValidate: Boolean(serviceId),
+    });
+  }, [serviceId, setValue]);
+
+  /* Focus + scroll to the first invalid field on a failed submit */
+  const focusFirstError = (formErrors) => {
+    const firstKey = Object.keys(formErrors ?? {})[0];
+    if (!firstKey) return;
+
+    const el =
+      document.getElementById(`field-${firstKey}`) ||
+      (firstKey === "service"
+        ? document.getElementById("service-select")
+        : null);
+
+    if (el && typeof el.focus === "function") {
+      el.focus({ preventScroll: true });
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -107,23 +147,28 @@ export default function BookingForm({ serviceId, onSuccess, onError, submitLabel
   return (
     <form
       id="booking-form"
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, focusFirstError)}
       noValidate
       aria-label="نموذج الحجز"
     >
-      {/* Hidden service field */}
-      <input type="hidden" {...register("service")} />
+      {/* Hidden service field – kept in sync with the selected service */}
+      <input type="hidden" id="field-service" {...register("service")} />
+
+      {/* Service-level error (only shown when no service is selected) */}
+      {errors.service && (
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mb-5 flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-3 py-2 text-sm font-medium text-[var(--color-error)]"
+        >
+          <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          {errors.service.message}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {formConfig.map((field) => renderField(field, register, errors))}
       </div>
-
-      {/* General form error */}
-      {errors.service && (
-        <p role="alert" className="mt-3 text-sm text-[var(--color-error)]">
-          {errors.service.message}
-        </p>
-      )}
 
       <div className="mt-8">
         <Button

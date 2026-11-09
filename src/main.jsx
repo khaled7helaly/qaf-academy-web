@@ -34,9 +34,13 @@ const metaDesc = document.querySelector("meta[name='description']");
 if (metaDesc) metaDesc.content = siteConfig.seo.description;
 
 // ── Render ───────────────────────────────────────────────
+// `BASE_URL` is "/" in dev and "/<repo>/" on GitHub Pages. React Router needs
+// it as the basename so routes resolve under the deployed sub-path.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <App />
     </BrowserRouter>
   </React.StrictMode>

@@ -1,7 +1,12 @@
 /**
  * utils/buildZodSchema.js
- * Generates a Zod schema dynamically from form.config.js.
+ * Generates a Zod v4 schema dynamically from form.config.js.
  * Adding/removing a field in form.config.js automatically updates validation.
+ *
+ * All messages are Arabic. Zod v4 uses `{ message }` (not the Zod v3
+ * `errorMap`) for custom errors — using `errorMap` makes Zod fall back to its
+ * English defaults, which is why enum/select fields previously showed
+ * "Invalid option: expected one of ...".
  */
 
 import { z } from "zod";
@@ -13,7 +18,7 @@ export function buildZodSchema() {
   formConfig.forEach((field) => {
     if (field.honeypot) {
       // Honeypot must be empty; bots fill it in
-      shape[field.id] = z.string().max(0).optional();
+      shape[field.id] = z.string().max(0, "").optional();
       return;
     }
 
@@ -22,7 +27,7 @@ export function buildZodSchema() {
 
     switch (type) {
       case "email":
-        schema = z.string().email("أدخل بريداً إلكترونياً صحيحاً");
+        schema = z.email("أدخل بريداً إلكترونياً صحيحاً");
         break;
 
       case "tel":
@@ -38,9 +43,10 @@ export function buildZodSchema() {
       case "select":
       case "radio":
         if (options && options.length) {
-          schema = z.enum(options.map((o) => o.value), {
-            errorMap: () => ({ message: "اختر قيمة من القائمة" }),
-          });
+          schema = z.enum(
+            options.map((o) => o.value),
+            { message: "اختر قيمة من القائمة" }
+          );
         } else {
           schema = z.string();
         }
@@ -49,10 +55,16 @@ export function buildZodSchema() {
       default:
         schema = z.string();
         if (validation.min) {
-          schema = schema.min(validation.min, `أدخل ${validation.min} أحرف على الأقل`);
+          schema = schema.min(
+            validation.min,
+            `أدخل ${validation.min} أحرف على الأقل`
+          );
         }
         if (validation.max) {
-          schema = schema.max(validation.max, `الحد الأقصى ${validation.max} حرف`);
+          schema = schema.max(
+            validation.max,
+            `الحد الأقصى ${validation.max} حرف`
+          );
         }
         if (validation.pattern) {
           schema = schema.regex(

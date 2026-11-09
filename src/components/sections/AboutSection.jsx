@@ -70,7 +70,7 @@ export default function AboutSection() {
               <div className="absolute -inset-4 rounded-[var(--radius-xl)] bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-accent)]/10" />
               <div className="absolute -inset-2 rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-accent)]/30" />
               <img
-                src={about.image}
+                src={`${import.meta.env.BASE_URL}images/about.webp`}
                 alt="تعليم القرآن الكريم"
                 className="relative w-full rounded-[var(--radius-xl)]"
                 onError={(e) => {

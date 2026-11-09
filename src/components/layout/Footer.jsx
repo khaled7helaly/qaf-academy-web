@@ -38,12 +38,16 @@ const iconMap = {
   FaWhatsapp,
 };
 
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)]";
+const footerLink = `rounded-sm !text-white/70 hover:!text-white transition-colors ${focusRing}`;
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
     <footer
-      className="bg-[var(--color-primary-dark)] text-[var(--color-text-inverse)] pt-16 pb-8 mt-0"
+      className="bg-[var(--color-primary-dark)] text-white pt-16 pb-8"
       aria-label="تذييل الصفحة"
     >
       <Container>
@@ -58,42 +62,42 @@ export default function Footer() {
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
               <span
-                className="text-2xl font-black text-[var(--color-accent)]"
+                className="text-2xl font-black !text-[var(--color-accent)]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {siteConfig.brand.name}
               </span>
             </div>
-            <p className="text-sm text-white/70 leading-relaxed max-w-xs">
+            <p className="text-sm !text-white/70 leading-relaxed max-w-xs">
               {siteConfig.brand.tagline}
             </p>
           </div>
 
           {/* Quick links */}
-          <div>
-            <h3 className="font-bold mb-4 text-[var(--color-accent)]">روابط سريعة</h3>
-            <ul className="space-y-2 text-sm text-white/70">
-              <li><Link to="/" className="hover:text-white transition-colors">الرئيسية</Link></li>
-              <li><Link to="/booking" className="hover:text-white transition-colors">احجز الآن</Link></li>
+          <nav aria-label="روابط سريعة">
+            <h3 className="font-bold mb-4 !text-[var(--color-accent)]">روابط سريعة</h3>
+            <ul className="space-y-2 text-sm text-white/70 list-none m-0 p-0">
+              <li><Link to="/" className={footerLink}>الرئيسية</Link></li>
+              <li><Link to="/booking" className={footerLink}>احجز الآن</Link></li>
               {siteConfig.trial.enabled && (
                 <li>
-                  <Link to="/booking?service=free-trial" className="hover:text-white transition-colors">
+                  <Link to="/booking?service=free-trial" className={footerLink}>
                     جلسة مجانية
                   </Link>
                 </li>
               )}
             </ul>
-          </div>
+          </nav>
 
           {/* Contact & Social */}
           <div>
-            <h3 className="font-bold mb-4 text-[var(--color-accent)]">تواصل معنا</h3>
+            <h3 className="font-bold mb-4 !text-[var(--color-accent)]">تواصل معنا</h3>
             <a
               href={`mailto:${siteConfig.contact.email}`}
-              className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors mb-4"
+              className={`inline-flex items-center gap-2 text-sm text-white/70 mb-4 ${footerLink}`}
             >
               <Mail size={16} />
-              {siteConfig.contact.email}
+              <span dir="ltr">{siteConfig.contact.email}</span>
             </a>
             <div className="flex items-center gap-3">
               {siteConfig.social.map((s) => {
@@ -105,7 +109,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
-                    className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-[var(--color-accent)] transition-colors duration-200"
+                    className={`w-9 h-9 rounded-full bg-white/10 !text-white flex items-center justify-center hover:bg-[var(--color-accent)] hover:!text-[var(--color-primary-dark)] transition-colors duration-200 ${focusRing}`}
                   >
                     <Icon size={16} />
                   </a>
@@ -115,7 +119,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-white/40">
+        <p className="mt-8 text-center text-xs !text-white/60">
           © {year} {siteConfig.brand.fullName}. جميع الحقوق محفوظة.
         </p>
       </Container>

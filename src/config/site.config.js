@@ -5,14 +5,22 @@
  * rebrand the template for any client without touching component code.
  */
 
+/**
+ * Public base path injected by Vite.
+ * - "/" in dev and on root hosts (Vercel).
+ * - "/<repo>/" on GitHub Pages project sites.
+ * All public asset paths must be prefixed with it so they resolve after deploy.
+ */
+const base = import.meta.env.BASE_URL;
+
 const siteConfig = {
   /** Brand identity */
   brand: {
-    name: "قاف",
+    // name: "قاف",
     fullName: "أكاديمية قاف لتعليم القرآن الكريم",
     tagline: "تعلّم القرآن الكريم بأسلوب أصيل وتجربة معاصرة",
-    logoPath: "/images/logo.svg",      // public/images/logo.svg
-    faviconPath: "/favicon.svg",
+    logoPath: `${base}images/logo2.svg.png`,
+    faviconPath: `${base}favicon.svg`,
   },
 
   /** Contact & social */
@@ -33,7 +41,7 @@ const siteConfig = {
     description:
       "أكاديمية قاف – تعلّم القرآن الكريم تجويداً وحفظاً وتفسيراً مع نخبة من المعلمين المعتمدين عبر الإنترنت.",
     keywords: "تعليم القرآن, أكاديمية قاف, تجويد, حفظ القرآن, تعليم أونلاين",
-    ogImage: "/images/og-image.jpg",
+    ogImage: `${base}images/logo2.svg.png`,
   },
 
   /** i18n / direction */

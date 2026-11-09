@@ -2,71 +2,123 @@
  * pages/Booking.jsx
  * Booking page:
  * - Reads ?service=<id> from URL
- * - Shows ServiceSummary (sticky sidebar on desktop)
+ * - Shows ServiceSummary
  * - Falls back to a service dropdown if service is missing/invalid
- * - Renders BookingForm (generated from form.config.js)
- * - On submit: POSTs to Apps Script, then shows success state with WhatsApp link
+ * - Renders BookingForm
+ * - On submit: Opens WhatsApp with a prefilled booking message
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Home, AlertCircle, ArrowRight } from "lucide-react";
+import {
+  MessageCircle,
+  Home,
+  AlertCircle,
+  ArrowRight,
+} from "lucide-react";
+
 import siteConfig from "@config/site.config";
 import services from "@content/services";
 import bookingContent from "@content/booking";
-import { submitLead }       from "@utils/submitLead";
+
 import { buildWhatsAppUrl } from "@utils/whatsapp";
-import BookingForm          from "@components/booking/BookingForm";
-import ServiceSummary       from "@components/booking/ServiceSummary";
-import Container            from "@components/ui/Container";
-import Button               from "@components/ui/Button";
-import Select               from "@components/ui/Select";
+
+import BookingForm from "@components/booking/BookingForm";
+import ServiceSummary from "@components/booking/ServiceSummary";
+import Container from "@components/ui/Container";
+import Button from "@components/ui/Button";
+import Select from "@components/ui/Select";
 
 // Merge trial service into the selectable list if trial is enabled
 const allServices = siteConfig.trial.enabled
   ? [...services, { ...bookingContent.trial }]
   : services;
 
-const serviceOptions = allServices.map((s) => ({ value: s.id, label: s.name }));
-
+const serviceOptions = allServices.map((service) => ({
+  value: service.id,
+  label: service.name,
+}));
 
 export default function Booking() {
-  const [searchParams]        = useSearchParams();
-  const urlServiceId          = searchParams.get("service") ?? "";
-  const [selectedId, setSelectedId] = useState(urlServiceId);
+  const [searchParams] = useSearchParams();
+
+  const urlServiceId = searchParams.get("service") ?? "";
+
+  // Ignore an unknown ?service=<id> so the fallback dropdown stays usable
+  const validUrlServiceId = useMemo(
+    () =>
+      allServices.some((service) => service.id === urlServiceId)
+        ? urlServiceId
+        : "",
+    [urlServiceId]
+  );
+
+  const [selectedId, setSelectedId] = useState(validUrlServiceId);
   const [submitState, setSubmitState] = useState("idle");
   const [submittedData, setSubmittedData] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  // Keep state in sync when the URL changes (e.g. navigating between plans)
+  useEffect(() => {
+    setSelectedId(validUrlServiceId);
+  }, [validUrlServiceId]);
+
   const resolvedService = useMemo(
-    () => allServices.find((s) => s.id === selectedId) ?? null,
+    () => allServices.find((service) => service.id === selectedId) ?? null,
     [selectedId]
   );
 
-  const handleSuccess = async (formData) => {
-    const payload = { ...formData, service: selectedId };
+  // Build WhatsApp URL after successful form validation
+  const whatsappUrl = useMemo(() => {
+    if (!submittedData) return "#";
 
+    return buildWhatsAppUrl(
+      submittedData,
+      resolvedService?.name ?? selectedId
+    );
+  }, [submittedData, resolvedService, selectedId]);
+
+  // Handle form submission
+  const handleSuccess = (formData) => {
     // Block honeypot submissions
     if (formData.website) return;
 
-    await submitLead(payload);
-    setSubmittedData(formData);
+    const payload = {
+      ...formData,
+      service: selectedId,
+    };
+
+    // Build WhatsApp message
+    const url = buildWhatsAppUrl(
+      payload,
+      resolvedService?.name ?? selectedId
+    );
+
+    // Open WhatsApp immediately
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    // Show success state
+    setSubmittedData(payload);
     setSubmitState("success");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleError = (err) => {
-    console.error("[Booking] submit error", err);
+    console.error("[Booking] submission error", err);
+
     setErrorMsg(err?.message ?? "خطأ غير معروف");
     setSubmitState("error");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
-  const whatsappUrl = useMemo(() => {
-    if (!submittedData) return "#";
-    return buildWhatsAppUrl(submittedData, resolvedService?.name ?? selectedId);
-  }, [submittedData, resolvedService, selectedId]);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <main
@@ -84,7 +136,8 @@ export default function Booking() {
         </Link>
 
         <AnimatePresence mode="wait">
-          {/* ── SUCCESS ───────────────────────────────────── */}
+
+          {/* SUCCESS STATE */}
           {submitState === "success" && (
             <motion.div
               key="success"
@@ -94,22 +147,30 @@ export default function Booking() {
               className="max-w-lg mx-auto text-center py-16"
             >
               <div className="text-6xl mb-6">🎉</div>
+
               <h1
                 className="text-3xl font-black text-[var(--color-primary)] mb-3"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {bookingContent.success.heading}
               </h1>
+
               <p className="text-[var(--color-text-secondary)] mb-8 leading-relaxed">
                 {bookingContent.success.body}
               </p>
+
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Button variant="accent" size="lg">
                     <MessageCircle size={18} />
                     {bookingContent.success.whatsapp}
                   </Button>
                 </a>
+
                 <Link to="/">
                   <Button variant="ghost" size="lg">
                     <Home size={18} />
@@ -120,7 +181,7 @@ export default function Booking() {
             </motion.div>
           )}
 
-          {/* ── ERROR ────────────────────────────────────── */}
+          {/* ERROR STATE */}
           {submitState === "error" && (
             <motion.div
               key="error"
@@ -129,21 +190,32 @@ export default function Booking() {
               exit={{ opacity: 0 }}
               className="max-w-lg mx-auto text-center py-12"
             >
-              <AlertCircle size={48} className="mx-auto mb-4 text-[var(--color-error)]" />
+              <AlertCircle
+                size={48}
+                className="mx-auto mb-4 text-[var(--color-error)]"
+              />
+
               <h1 className="text-2xl font-bold text-[var(--color-error)] mb-2">
                 {bookingContent.error.heading}
               </h1>
-              <p className="text-[var(--color-text-secondary)] mb-2">{bookingContent.error.body}</p>
+
+              <p className="text-[var(--color-text-secondary)] mb-2">
+                {bookingContent.error.body}
+              </p>
+
               {errorMsg && (
-                <p className="text-xs text-[var(--color-text-muted)] mb-6 font-mono">{errorMsg}</p>
+                <p className="text-xs text-[var(--color-text-muted)] mb-6 font-mono">
+                  {errorMsg}
+                </p>
               )}
+
               <Button onClick={() => setSubmitState("idle")}>
                 {bookingContent.error.retry}
               </Button>
             </motion.div>
           )}
 
-          {/* ── FORM ─────────────────────────────────────── */}
+          {/* BOOKING FORM */}
           {submitState === "idle" && (
             <motion.div
               key="form"
@@ -159,15 +231,16 @@ export default function Booking() {
                 >
                   {bookingContent.pageTitle}
                 </h1>
+
                 <p className="text-[var(--color-text-secondary)]">
                   {bookingContent.pageSubtitle}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
                 {/* Form area */}
                 <div className="lg:col-span-2">
-                  {/* Service fallback dropdown */}
                   {!resolvedService && (
                     <div className="mb-6">
                       <Select
@@ -201,9 +274,11 @@ export default function Booking() {
                     </div>
                   )}
                 </div>
+
               </div>
             </motion.div>
           )}
+
         </AnimatePresence>
       </Container>
     </main>
