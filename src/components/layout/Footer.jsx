@@ -99,29 +99,34 @@ export default function Footer() {
               <Mail size={16} />
               <span dir="ltr">{siteConfig.contact.email}</span>
             </a>
-            <div className="flex items-center gap-3">
-              {siteConfig.social.map((s) => {
-                const Icon = iconMap[s.icon];
-                return Icon ? (
-                  <a
-                    key={s.id}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.label}
-                    className={`w-9 h-9 rounded-full bg-white/10 !text-white flex items-center justify-center hover:bg-[var(--color-accent)] hover:!text-[var(--color-primary-dark)] transition-colors duration-200 ${focusRing}`}
-                  >
-                    <Icon size={16} />
-                  </a>
-                ) : null;
-              })}
-            </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://www.facebook.com/share/1Cq8zMUjzp/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className={`w-9 h-9 rounded-full bg-white/10 !text-white flex items-center justify-center hover:bg-[var(--color-accent)] hover:!text-[var(--color-primary-dark)] transition-colors duration-200 ${focusRing}`}
+                >
+                  <FaFacebookF size={16} />
+                </a>
+              </div>
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs !text-white/60">
-          © {year} {siteConfig.brand.fullName}. جميع الحقوق محفوظة.
-        </p>
+      <p className="mt-8 text-center text-xs !text-white/60">
+          © {year}{" "}
+          <a
+            href="https://khaled7helaly.github.io/helaly-website/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="!text-white hover:!text-[var(--color-accent)] transition-colors font-semibold"
+          >
+            Helaly Tech Studio
+          </a>
+          . All Rights Reserved.
+          <span className="mx-2">|</span>
+          {siteConfig.brand.fullName}
+      </p>
       </Container>
     </footer>
   );
