@@ -1,15 +1,19 @@
-/**
- * components/sections/AboutSection.jsx
- */
-
 import React from "react";
 import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import { about } from "@content/home";
 import Container from "@components/ui/Container";
 import SectionTitle from "@components/ui/SectionTitle";
+import { useMediaQuery } from "@hooks/useMediaQuery";
 
 export default function AboutSection() {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  // Entrance offset: slide in from the side on desktop (there is room), fade up
+  // on mobile where a sideways shift is wider than the container padding and
+  // would push the layout past the viewport edge.
+  const entrance = (direction) => (isDesktop ? { x: direction * 32 } : { y: 24 });
+
   return (
     <section
       id="about"
@@ -22,8 +26,8 @@ export default function AboutSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Text */}
           <motion.div
-            initial={{ opacity: 0, x: -32 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, ...entrance(-1) }}
+            whileInView={{ opacity: 1, x: 0, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
             className="space-y-5"
@@ -59,8 +63,8 @@ export default function AboutSection() {
 
           {/* Illustration */}
           <motion.div
-            initial={{ opacity: 0, x: 32 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, ...entrance(1) }}
+            whileInView={{ opacity: 1, x: 0, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.1 }}
             className="flex justify-center"
