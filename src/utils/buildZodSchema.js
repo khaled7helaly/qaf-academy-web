@@ -52,6 +52,42 @@ export function buildZodSchema() {
         }
         break;
 
+      case "number": {
+        let numberSchema = z
+          .number({ message: validation.typeMsg ?? "أدخل رقماً صحيحاً" })
+          .int(validation.typeMsg ?? "أدخل رقماً صحيحاً");
+
+        if (validation.min !== undefined) {
+          numberSchema = numberSchema.min(
+            validation.min,
+            validation.minMsg ?? `أدخل قيمة ${validation.min} أو أكثر`
+          );
+        }
+        if (validation.max !== undefined) {
+          numberSchema = numberSchema.max(
+            validation.max,
+            validation.maxMsg ?? `أدخل قيمة ${validation.max} أو أقل`
+          );
+        }
+
+        // Empty input → undefined, so "required" reports instead of NaN
+        schema = z.preprocess((value) => {
+          if (value === "" || value === null || value === undefined) {
+            return undefined;
+          }
+          const parsed = Number(value);
+          return Number.isFinite(parsed) ? parsed : undefined;
+        }, numberSchema);
+        break;
+      }
+
+      case "time":
+        // 24-hour "HH:MM" (the picker converts the 12-hour AM/PM input)
+        schema = z
+          .string()
+          .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "اختر وقتاً صحيحاً");
+        break;
+
       default:
         schema = z.string();
         if (validation.min) {

@@ -47,6 +47,18 @@ export function buildWhatsAppUrl(formValues, serviceName) {
       display = option ? option.label : value;
     }
 
+    // Show the stored 24-hour time ("19:00") as a readable 12-hour time
+    if (field.type === "time" && typeof display === "string") {
+      const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(display);
+
+      if (match) {
+        const hour24 = Number(match[1]);
+        const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+        display = `${hour12}:${match[2]} ${hour24 < 12 ? "ص" : "م"}`;
+      }
+    }
+
     lines.push(`*${field.label}:* ${display}`);
   });
 

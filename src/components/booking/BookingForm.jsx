@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle } from "lucide-react";
 import formConfig from "@config/form.config";
@@ -14,12 +14,14 @@ import { buildZodSchema } from "@utils/buildZodSchema";
 import Input from "@components/ui/Input";
 import Select from "@components/ui/Select";
 import Textarea from "@components/ui/Textarea";
+import NumberInput from "@components/ui/NumberInput";
+import TimePicker from "@components/ui/TimePicker";
 import Button from "@components/ui/Button";
 
 const schema = buildZodSchema();
 
-function renderField(field, register, errors) {
-  const { id, label, type, placeholder, required, options, rows, honeypot } = field;
+function renderField(field, { register, control }, errors) {
+  const { id, label, type, placeholder, required, options, rows, honeypot, validation } = field;
   const error = errors[id]?.message;
 
   // Honeypot – render off-screen, no label
@@ -66,6 +68,47 @@ function renderField(field, register, errors) {
         />
       );
       break;
+    case "number":
+      fieldEl = (
+        <Controller
+          name={id}
+          control={control}
+          render={({ field: controlled }) => (
+            <NumberInput
+              id={`field-${id}`}
+              label={label}
+              error={error}
+              required={required}
+              placeholder={placeholder}
+              min={validation?.min}
+              max={validation?.max}
+              value={controlled.value}
+              onChange={controlled.onChange}
+              onBlur={controlled.onBlur}
+            />
+          )}
+        />
+      );
+      break;
+    case "time":
+      fieldEl = (
+        <Controller
+          name={id}
+          control={control}
+          render={({ field: controlled }) => (
+            <TimePicker
+              id={`field-${id}`}
+              label={label}
+              error={error}
+              required={required}
+              value={controlled.value}
+              onChange={controlled.onChange}
+              onBlur={controlled.onBlur}
+            />
+          )}
+        />
+      );
+      break;
     default:
       fieldEl = (
         <Input
@@ -95,6 +138,7 @@ export default function BookingForm({
 }) {
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting },
@@ -167,7 +211,7 @@ export default function BookingForm({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {formConfig.map((field) => renderField(field, register, errors))}
+        {formConfig.map((field) => renderField(field, { register, control }, errors))}
       </div>
 
       <div className="mt-8">

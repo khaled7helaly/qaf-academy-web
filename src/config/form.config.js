@@ -4,18 +4,23 @@
  * Single source of truth for the booking form.
  *
  * Each field object:
- *   id          – unique key, used as form key + sheet column header
+ *   id          – unique key, used as the form key
  *   label       – displayed label (Arabic)
  *   type        – "text" | "tel" | "email" | "select" | "textarea" | "radio"
+ *                 | "number" (numeric input + −/+ stepper)
+ *                 | "time"   (12-hour picker, stored as a 24-hour "HH:MM")
  *   placeholder – optional placeholder
  *   required    – boolean
  *   options     – for select/radio: [{ value, label }]
- *   validation  – Zod-compatible rules: { min?, max?, pattern?, patternMsg? }
+ *   validation  – Zod-compatible rules. For "text" min/max are lengths,
+ *                 for "number" they are the allowed value range:
+ *                 { min?, max?, pattern?, patternMsg?,
+ *                   typeMsg?, minMsg?, maxMsg? }
  *   honeypot    – if true, field is hidden from users (bot trap)
  *   rows        – only for textarea
  *   colSpan     – "full" spans both grid columns, default = 1
  *
- * Adding a field here makes it appear in the form, the sheet column,
+ * Adding a field here makes it appear in the form
  * AND the WhatsApp message automatically.
  */
 
@@ -33,7 +38,7 @@ const formConfig = [
     id:          "phone",
     label:       "رقم الجوال",
     type:        "tel",
-    placeholder: "05XXXXXXXX",
+    placeholder: "+962 7X XXX XXXX",
     required:    true,
     validation:  {
       pattern:    "^[+]?[0-9\\s\\-]{7,20}$",
@@ -48,15 +53,17 @@ const formConfig = [
     required:    false,
   },
   {
-    id:       "age",
-    label:    "الفئة العمرية",
-    type:     "select",
-    required: true,
-    options:  [
-      { value: "child",  label: "أطفال (6–12 سنة)" },
-      { value: "teen",   label: "مراهقون (13–17 سنة)" },
-      { value: "adult",  label: "بالغون (18+)" },
-    ],
+    id:          "age",
+    label:       "العمر",
+    type:        "number",
+    placeholder: "مثال: 12",
+    required:    true,
+    validation:  {
+      min:    4,
+      max:    100,
+      minMsg: "أدخل عمراً لا يقل عن 4 سنوات",
+      maxMsg: "أدخل عمراً لا يزيد عن 100 سنة",
+    },
   },
   {
     id:       "level",
@@ -73,14 +80,9 @@ const formConfig = [
   {
     id:       "preferredTime",
     label:    "الوقت المفضل للحصص",
-    type:     "select",
+    type:     "time",
     required: true,
-    options:  [
-      { value: "morning",   label: "صباحاً (8 ص – 12 م)" },
-      { value: "afternoon", label: "ظهراً (12 م – 4 م)" },
-      { value: "evening",   label: "مساءً (4 م – 9 م)" },
-      { value: "flexible",  label: "مرن (نتفق لاحقاً)" },
-    ],
+    colSpan:  "full",
   },
   {
     id:          "notes",

@@ -49,12 +49,8 @@ const siteConfig = {
   dir: "rtl",       // "rtl" | "ltr" – flips the whole layout
 
   /**
-   * Google Apps Script Web App URL.
-   * Set VITE_APPS_SCRIPT_URL in .env (never commit the real URL to git).
+   * Trial / free-session feature toggle
    */
-  appsScriptUrl: import.meta.env.VITE_APPS_SCRIPT_URL ?? "",
-
-  /** Trial / free-session feature toggle */
   trial: {
     enabled: true,
   },
